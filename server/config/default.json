@@ -1,0 +1,7 @@
+
+{
+    "name" : "chat-room" ,
+    "db" : {
+        "address": "mongodb://localhost:27017/chatroom"
+    }
+}
