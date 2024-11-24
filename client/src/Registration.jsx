@@ -11,10 +11,13 @@ const Registration = () => {
     const navigate = useNavigate()
 
  
+    const handleClick = () => {
+        navigate('/login');
+      };
 
 const handleSubmit = (e) => {
     e.preventDefault()
-    axios.post("http://127.0.0.1:3000/register" , {name , email , password})
+    axios.post("http://127.0.0.1:3000/api/auth/register" , {name , email , password})
     .then(res => {
         navigate('/Login')
     })
@@ -25,8 +28,6 @@ const handleSubmit = (e) => {
           setError('خطایی در ارتباط با سرور رخ داده است');
         }
       });
-   
-
 }
 
 
@@ -47,7 +48,7 @@ const handleSubmit = (e) => {
                                             <div className="form-floating mb-3">
                                                 <input
                                                     onChange={(e) => setName(e.target.value)}
-                                                    type="text" className="form-control" name="name" id="name" placeholder="name" />
+                                                    type="text" className="form-control" name="name" id="name" placeholder="name" required/>
                                                 <label htmlFor="name" className="form-label">First Name</label>
 
                                             </div>
@@ -57,7 +58,7 @@ const handleSubmit = (e) => {
                                             <div className="form-floating mb-3">
                                                 <input
                                                     onChange={(e) => setEmail(e.target.value)}
-                                                    type="email" className="form-control" name="email" id="email" placeholder="email" />
+                                                    type="email" className="form-control" name="email" id="email" placeholder="email" required/>
                                                 <label htmlFor="email" className="form-label">email </label>
 
                                             </div>
@@ -69,7 +70,7 @@ const handleSubmit = (e) => {
                                             <div className="form-floating mb-3">
                                                 <input
                                                     onChange={(e) => setPassword(e.target.value)}
-                                                    type="password" className="form-control" name="password" id="password" placeholder="password" />
+                                                    type="password" className="form-control" name="password" id="password" placeholder="password" required/>
                                                 <label htmlFor="password" className="form-label">password</label>
 
                                             </div>
@@ -78,10 +79,10 @@ const handleSubmit = (e) => {
                                         {error && <div className="error-message">{error}</div>}
                                         <div className="col-12">
                                             <div className="d-grid my-3">
-                                                <button className="btn btn-primary btn-lg" type="submit">Sign up</button>
+                                            <button className="btn btn-primary btn-lg mb-1" type="submit">Sign up</button>
+                                            <button  onClick={handleClick} className="btn btn-primary btn-lg" type="submit">login</button>
                                             </div>
                                         </div>
-                                        
                                     </div>
                                 </form>
                             </div>

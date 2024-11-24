@@ -1,5 +1,4 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Registration from './Registration';
@@ -9,6 +8,7 @@ import { EmailProvider } from './UserContext';
 
 
 function App() {
+  console.log('home')
   return (
     <EmailProvider>
       <BrowserRouter>
