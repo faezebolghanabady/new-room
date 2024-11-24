@@ -42,7 +42,8 @@ import "./assets/Style.css"
         console.log('No access token found');
       }
     }, [token]);
-    
+
+  
     useEffect(() => {
       if (socket && room) {
         socket.emit('join_room', room);
