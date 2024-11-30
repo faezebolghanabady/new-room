@@ -45,10 +45,18 @@ import "./assets/Style.css"
 
   
     useEffect(() => {
+      console.log('11111111111111')
       if (socket && room) {
-        socket.emit('join_room', room);
+        console.log('room' , room)
+        const joinData = {
+          room: room,
+        };
+        socket.emit('join_room', joinData , (response)=>{
+         console.log('3333333333333333333333')
+          console.log('join_room message:data' , response);
+        });
       }
-    }, [socket, room]);
+    }, [socket , room]);
 
     useEffect(() => {
       if (socket) {  

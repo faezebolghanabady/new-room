@@ -1,20 +1,38 @@
-const expresse = require("express");
-const cors = require("cors");
-const Jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser");
-const http = require("http")
-const { createServer } = require('ws');
-const { Server } = require("socket.io");
-const bcrypt = require('bcrypt');
-const router = require('./src/routes');
-const chat = require('./src/models/chat')
+import { Socket } from "socket.io";
+import { NextFunction } from 'express';
+import './src/types/socket.io'; 
+import express from 'express';
+import cors from "cors";
+import Jwt from "jsonwebtoken";
+import cookieParser from 'cookie-parser';
+import http from "http";
+import { Server } from "socket.io";
+import'./src/routes';
+import router from './src/routes/index.ts'
+// import { PrismaClient } from '@prisma/client';
 
-const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
-var app = expresse();
-app.use(expresse.json());
+
+interface JwtDecoded  {
+  id: number,
+  name: string,
+  email: string;
+  password : string,
+}
+
+interface JoinRoomData {
+  room: string;
+}
+
+interface SendMessageData {
+  room: string;
+  message: string;
+}
+
+const app = express();
+app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
@@ -46,7 +64,7 @@ app.use(cors({
 
 
 
-const verifyUser = (socket, next) => {
+const verifyUser = (socket:Socket, next:NextFunction) => {
   const accessToken = socket.handshake.auth.token; 
 
   if (!accessToken) {
@@ -56,11 +74,13 @@ const verifyUser = (socket, next) => {
       return next(new Error("No access token and failed to renew."));
     }
   } else {
-    Jwt.verify(accessToken, "jwt-access-token-secret-key", (err, decoded) => {
+    Jwt.verify(accessToken, "jwt-access-token-secret-key", (err : Error | null , decoded :  object | string | undefined | JwtDecoded) => {
       if (err) {
         return next(new Error("Invalid token")); 
       } else {
-        socket.email = decoded.email; // اضافه کردن ایمیل از توکن به داده‌های socket
+        if(decoded && typeof decoded === 'object' && 'email' in decoded){
+          socket.email = decoded.email; // اضافه کردن ایمیل از توکن به داده‌های socket
+        }
         return next(); // توکن معتبر است و ادامه می‌دهد
       }
     });
@@ -70,38 +90,39 @@ const verifyUser = (socket, next) => {
 
 
 
-const renewToken = (req, res) => {
+const renewToken = (socket:Socket) => {
 
-  const refreshtoken = req.cookies.refreshToken;
+  const refreshtoken = socket.handshake.query.refreshToken;
   let exist = false;
   if (!refreshtoken) {
-    return res.json({ valid: false, message: "no refresh token" });
+    socket.emit('tokenError' , {valid:false , message:'no refresh token'})
   } else {
-    Jwt.verify(refreshtoken, "jwt-refresh-token-secret-key", (err, decoded) => {
+    const refreshTokenString = Array.isArray(refreshtoken) ? refreshtoken.join('') : refreshtoken;
+    Jwt.verify(refreshTokenString, "jwt-refresh-token-secret-key", (err:Error | null, decoded: object | string | undefined | JwtDecoded) => {
       if (err) {
-        return res.json({ valid: false, message: "invalid refresh Token" });
+        socket.emit('tokenError' , {valid: false , message:'invalid refresh Token'})
       } else {
-        const accessToken = Jwt.sign(
-          { email: decoded.email },
-          "jwt-access-token-secret-key",
-          { expiresIn: "1m" }
-        );
-        res.cookie("accessToken", accessToken, { maxAge: 60000 });
-        exist = true;
+        if(decoded && typeof decoded === 'object' && 'email' in decoded){
+          const accessToken = Jwt.sign({ email: decoded.email },"jwt-access-token-secret-key",{ expiresIn: "1m" });
+          socket.emit('accessToken', { accessToken });
+          exist = true
+        }
+        
+       ;
       }
     });
   }
   return exist;
 };
 
-let rooms = {}; // ذخیره‌سازی اتاق‌ها
-// io.use(verifyUser);
-io.on("connection" , (socket) => {
+let rooms: { [key: string]: string[] } = {}; 
+io.on("connection" , (socket:Socket ) => {
   console.log(`User Connected to socket : ${socket.id}`);
-
-
-  socket.on("join_room", (data) => {
-    const room = data ;
+  console.log(`User Connected to socketpp : ${socket.id}`);
+  socket.on("join_room", (data : JoinRoomData) => {
+    console.log('data in back join rooom', data)
+    console.log('roooooooooooooooooooommmmmmmmmmmmmmmmm');
+    const {room} = data ;
     console.log('room', room)
     if (!room){
       return socket.emit("error", { message: "Room name is required" });
@@ -112,9 +133,10 @@ io.on("connection" , (socket) => {
     console.log(`User with ID: ${socket.id} joined room: ${room}`);
   });
 
-  socket.on("send_message", (data) => {
-    console.log('datasend_message', data)
+  socket.on("send_message", (data :SendMessageData) => {
+    console.log('datasend_message', data);
     const { room, message } = data;
+    console.log('room first', room)
     if (!room || !message){
       return socket.emit("error", { message: "Room name and message are required" });
     }
@@ -135,7 +157,6 @@ app.use('/api' , router)
 
 
 const port = process.env.PORT || 3000;
-app.set( "ipaddr", "127.0.0.1" );
 app.set( "port", 3000 );
 
 
