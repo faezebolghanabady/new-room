@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,7 +17,7 @@ const Registration = () => {
 
 const handleSubmit = (e) => {
     e.preventDefault()
-    axios.post("http://127.0.0.1:3000/api/auth/register" , {name , email , password})
+    axios.post("http://localhost:3000/api/auth/register" , {name , email , password})
     .then(res => {
         navigate('/Login')
     })

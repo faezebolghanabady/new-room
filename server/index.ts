@@ -9,10 +9,8 @@ import http from "http";
 import { Server } from "socket.io";
 import'./src/routes';
 import router from './src/routes/index.ts'
-// import { PrismaClient } from '@prisma/client';
-
-
-// const prisma = new PrismaClient();
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 
 interface JwtDecoded  {
@@ -133,32 +131,74 @@ io.on("connection" , (socket:Socket ) => {
     console.log(`User with ID: ${socket.id} joined room: ${room}`);
   });
 
-  socket.on("send_message", (data :SendMessageData) => {
+  socket.on("send_message", async (data :SendMessageData) => {
     console.log('datasend_message', data);
     const { room, message } = data;
     console.log('room first', room)
     if (!room || !message){
       return socket.emit("error", { message: "Room name and message are required" });
     }
+
+  
+
+    try {
+    
+      let chat = await prisma.chat.findUnique({
+        where: {
+          id: parseInt(room),
+        },
+      });
+
+      if (!chat) {
+        chat = await prisma.chat.create({
+          data: {
+            // اطلاعات بیشتر برای چت را ذخیره کنید
+          },
+        });
+      }
+    
+   
+      const savedMessage = await prisma.message.create({
+        data: {
+          message: message,
+          author: socket.id, 
+          chatId: chat.id,
+          room: room,  
+          time: new Date().toISOString(),
+        },
+      });
+
+      socket.to(room).emit("receive_message", {
+        message: savedMessage.message,
+        sender: savedMessage.author,
+      });
+  
+      console.log(`Message from ${socket.id}: ${message}`);
+    } catch (error) {
+      console.error("Error saving message:", error);
+      socket.emit("error", { message: "Error saving message" });
+    }
+
     console.log('test resive masage')
     socket.to(room).emit("receive_message", { message, sender: socket.id });
     console.log(`Message from ${socket.id}: ${message}`);
+
+  });
+    socket.on("disconnect", () => {
+      console.log("User Disconnected", socket.id);
+    });
   });
 
-  socket.on("disconnect", () => {
-    console.log("User Disconnected", socket.id);
-  });
-
-} )
+ 
 
 
 
 app.use('/api' , router)
 
-
+const ipaddr = process.env.IP_ADDR || "localhost";
 const port = process.env.PORT || 3000;
-app.set( "port", 3000 );
-
+app.set("ipaddr", ipaddr);
+app.set( "port", port );
 
 
 server.listen(app.get('port'), app.get('ipaddr'), () => {
