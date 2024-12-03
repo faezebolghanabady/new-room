@@ -14,6 +14,7 @@ const prisma = new PrismaClient();
 
 
 interface JwtDecoded  {
+  userId: number;
   id: number,
   name: string,
   email: string;
@@ -62,24 +63,65 @@ app.use(cors({
 
 
 
-const verifyUser = (socket:Socket, next:NextFunction) => {
+const verifyUser = (socket:Socket, next:(err?: Error)=>void) => {
   const accessToken = socket.handshake.auth.token; 
+  console.log("Access Token:", accessToken);
 
   if (!accessToken) {
+    console.log('No access token found. Attempting to renew...');
     if (renewToken(socket)) {
+      console.log('Token renewed successfully');
       return next();  
     } else {
+      console.log('Failed to renew token');
       return next(new Error("No access token and failed to renew."));
     }
   } else {
     Jwt.verify(accessToken, "jwt-access-token-secret-key", (err : Error | null , decoded :  object | string | undefined | JwtDecoded) => {
+      console.log('ok')
       if (err) {
+        console.log('erorrr darim ')
         return next(new Error("Invalid token")); 
+       
       } else {
-        if(decoded && typeof decoded === 'object' && 'email' in decoded){
-          socket.email = decoded.email; // اضافه کردن ایمیل از توکن به داده‌های socket
+        console.log('engaaa')
+
+
+        if (decoded && typeof decoded === 'object') {
+          console.log("Decoded Token: ", decoded); 
+        
+          // بررسی وجود فیلد 'email' در توکن
+          if ('email' in decoded) {
+            console.log('email ro darim migirim');
+            socket.email = decoded.email;
+          }
+        
+          // بررسی وجود فیلد 'userId' در توکن
+          if ('userId' in decoded) {
+            console.log('userId ro darim migirim');
+            socket.userId = decoded.userId;
+          }
+          
+          console.log('ok verify');
+          return next();
+        } else {
+          return next(new Error("Invalid token data"));
         }
-        return next(); // توکن معتبر است و ادامه می‌دهد
+        
+        
+
+        // if(decoded && typeof decoded === 'object' && 'email' in decoded){
+        //   console.log('email ro darim migirim')
+        //   console.log("Decoded Tokenjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj: ", decoded); 
+        //   socket.email = decoded.email;
+          
+        // }
+
+
+
+        console.log('ok verify ');
+        return next();
+         // توکن معتبر است و ادامه می‌دهد
       }
     });
   }
@@ -89,7 +131,6 @@ const verifyUser = (socket:Socket, next:NextFunction) => {
 
 
 const renewToken = (socket:Socket) => {
-
   const refreshtoken = socket.handshake.query.refreshToken;
   let exist = false;
   if (!refreshtoken) {
@@ -101,7 +142,7 @@ const renewToken = (socket:Socket) => {
         socket.emit('tokenError' , {valid: false , message:'invalid refresh Token'})
       } else {
         if(decoded && typeof decoded === 'object' && 'email' in decoded){
-          const accessToken = Jwt.sign({ email: decoded.email },"jwt-access-token-secret-key",{ expiresIn: "1m" });
+          const accessToken = Jwt.sign({ email: decoded.email },"jwt-access-token-secret-key",{ expiresIn: "1h" });
           socket.emit('accessToken', { accessToken });
           exist = true
         }
@@ -113,19 +154,42 @@ const renewToken = (socket:Socket) => {
   return exist;
 };
 
+io.use(verifyUser);
+
 let rooms: { [key: string]: string[] } = {}; 
-io.on("connection" , (socket:Socket ) => {
-  console.log(`User Connected to socket : ${socket.id}`);
+
+io.on("connection" , async(socket:Socket ) => {
+
+  socket.on('error', (error: Error) => {
+    console.log('Error in socket connection:', error.message);
+  });
+
   console.log(`User Connected to socketpp : ${socket.id}`);
+
+  // try{
+
+  //   const userRoom = await prisma.userRooms.findFirst({
+  //     where : {
+  //       id: roomId
+  //     }
+  //   });
+  //   if (userRoom) {
+      
+  //   }
+
+  // }catch{
+
+  // }
+
   socket.on("join_room", (data : JoinRoomData) => {
-    console.log('data in back join rooom', data)
-    console.log('roooooooooooooooooooommmmmmmmmmmmmmmmm');
+  
     const {room} = data ;
     console.log('room', room)
     if (!room){
       return socket.emit("error", { message: "Room name is required" });
     }
     socket.join(room);
+    console.log(`${socket.id} joined room: ${room}`);
     rooms[room] = rooms[room] ? [...rooms[room], socket.id] : [socket.id];
     console.log(socket.id + ' joined room ' + room);
     console.log(`User with ID: ${socket.id} joined room: ${room}`);
@@ -134,60 +198,77 @@ io.on("connection" , (socket:Socket ) => {
   socket.on("send_message", async (data :SendMessageData) => {
     console.log('datasend_message', data);
     const { room, message } = data;
-    console.log('room first', room)
+    console.log('room firsteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', room)
     if (!room || !message){
       return socket.emit("error", { message: "Room name and message are required" });
     }
 
-  
 
     try {
-    
-      let chat = await prisma.chat.findUnique({
+      let RoomUser = await prisma.room.findUnique({
         where: {
-          id: parseInt(room),
+          id: parseInt(room)
         },
       });
 
-      if (!chat) {
-        chat = await prisma.chat.create({
-          data: {
-            // اطلاعات بیشتر برای چت را ذخیره کنید
-          },
+      if (!RoomUser) {
+        RoomUser = await prisma.room.create({
+          data : {
+            id: parseInt(room, 10),
+            name: room,
+          }
         });
       }
+
+      console.log('socket.userId: رررررررررررررررررررررررررررررررررررررررررررر', socket.userId);
+     
+      const roomId = parseInt(room, 10);
+      console.log('rommid: رررررررررررررررررررررررررررررررررررررررررررر', roomId);
+       if (isNaN(roomId)) {
+       return socket.emit("error", { message: "Invalid room ID" });
+       }
     
-   
       const savedMessage = await prisma.message.create({
         data: {
           message: message,
-          author: socket.id, 
-          chatId: chat.id,
-          room: room,  
+          authorId: socket.userId,
+          roomId:roomId,
           time: new Date().toISOString(),
         },
       });
 
-      socket.to(room).emit("receive_message", {
-        message: savedMessage.message,
-        sender: savedMessage.author,
-      });
   
       console.log(`Message from ${socket.id}: ${message}`);
     } catch (error) {
-      console.error("Error saving message:", error);
+      console.error("Error saving messageثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثث:", error);
       socket.emit("error", { message: "Error saving message" });
     }
-
-    console.log('test resive masage')
-    socket.to(room).emit("receive_message", { message, sender: socket.id });
+    socket.to(room).emit("receive_message", { message, author: socket.id });
     console.log(`Message from ${socket.id}: ${message}`);
 
   });
+
+
     socket.on("disconnect", () => {
       console.log("User Disconnected", socket.id);
     });
+
+
   });
+
+
+  async function testConnection() {
+    try {
+      await prisma.$connect();  // تست اتصال به پایگاه داده
+      console.log("Database connection successful!------------------------------------------------------------------------");
+    } catch (error) {
+      console.error("Database connection failed:", error);
+    } finally {
+      await prisma.$disconnect();  // قطع اتصال در صورت پایان تست
+    }
+  }
+  
+  testConnection();
 
  
 

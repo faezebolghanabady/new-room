@@ -14,26 +14,50 @@ datasource db {
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
-  name      String
-  email     String
-  password  String
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String
+  password String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages  Message[]
+  rooms     Room[]      @relation("UserRooms")
+  UserRooms UserRooms[]
 }
 
 model Message {
-  id         Int      @id @default(autoincrement())
-  room       String
-  author     String
-  message    String
-  time       String
-  createdAt  DateTime @default(now())
+  id       Int    @id @default(autoincrement())
+  roomId   Int
+  authorId Int
+  message  String
+  time     String
 
-  chatId     Int      // Foreign key to Chat
-  chat       Chat     @relation(fields: [chatId], references: [id])  // Define the relation field
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id])
+  room   Room @relation(fields: [roomId], references: [id])
 }
 
-model Chat {
-  id        Int      @id @default(autoincrement())
+model Room {
+  id   Int    @id
+  name String
+
   createdAt DateTime @default(now())
-  messages  Message[]  // Define the messages field (one-to-many relation)
+  updatedAt DateTime @updatedAt
+
+  users     User[]      @relation("UserRooms")
+  messages  Message[]
+  UserRooms UserRooms[]
+}
+
+model UserRooms {
+  userId Int
+  roomId Int
+  user   User @relation(fields: [userId], references: [id])
+  room   Room @relation(fields: [roomId], references: [id])
+
+  @@id([userId, roomId])
 }

@@ -14,7 +14,7 @@ import "./assets/Style.css"
     const[currentMessage , setCurrentMessage] = useState();
     const { email , room } = useContext(EmailContext);
     const[messageList , setMessagelist] = useState([]);
-    const token = Cookies.get('refreshToken');
+    const token = Cookies.get('accessToken');
     const [socket, setSocket] = useState(null);
 
 
