@@ -170,7 +170,7 @@ io.on("connection" , async(socket:Socket ) => {
 
   //   const userRoom = await prisma.userRooms.findFirst({
   //     where : {
-  //       id: roomId
+  //       roomId : roomId
   //     }
   //   });
   //   if (userRoom) {
@@ -269,10 +269,6 @@ io.on("connection" , async(socket:Socket ) => {
   }
   
   testConnection();
-
- 
-
-
 
 app.use('/api' , router)
 
