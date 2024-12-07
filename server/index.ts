@@ -10,8 +10,25 @@ import { Server } from "socket.io";
 import'./src/routes';
 import router from './src/routes/index.ts'
 import { PrismaClient } from '@prisma/client';
+import redis from 'redis';
+import { createClient } from 'redis';
+import { json } from "stream/consumers";
+import { error } from "console";
+
 const prisma = new PrismaClient();
 
+
+
+const client = createClient({
+  url: 'redis://127.0.0.1:6379',
+  socket: {
+    connectTimeout: 10000  // افزایش زمان انتظار به 10 ثانیه
+  }
+});
+
+client.connect ().then(()=>{
+console.log('conecting to the rdisssssssssssssssssssssssssss')
+})
 
 interface JwtDecoded  {
   userId: number;
@@ -23,7 +40,10 @@ interface JwtDecoded  {
 
 interface JoinRoomData {
   room: string;
+  author : string;
 }
+
+
 
 interface SendMessageData {
   room: string;
@@ -51,8 +71,6 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
-
-
 
 
 app.use(cors({
@@ -166,30 +184,38 @@ io.on("connection" , async(socket:Socket ) => {
 
   console.log(`User Connected to socketpp : ${socket.id}`);
 
-  // try{
+  socket.on("join_room", async(data : JoinRoomData) => {
+    const {room , author } = data ;
+    
+    console.log('room', data)
 
-  //   const userRoom = await prisma.userRooms.findFirst({
-  //     where : {
-  //       roomId : roomId
-  //     }
-  //   });
-  //   if (userRoom) {
-      
-  //   }
+    const userId = author
+    setUserOnline(userId);
 
-  // }catch{
-
-  // }
-
-  socket.on("join_room", (data : JoinRoomData) => {
-  
-    const {room} = data ;
-    console.log('room', room)
-    if (!room){
-      return socket.emit("error", { message: "Room name is required" });
+    const roomData = await client.get(`room:${room}`);
+    if (roomData) {
+      const roomInfo = JSON.parse(roomData);
+      roomInfo.members += 1;
+      await client.set(`room:${room}`, JSON.stringify(roomInfo));
+    } else {
+      const newRoomData = {
+        name: room,
+        createdAt: new Date().toISOString(), // زمان ایجاد
+       
+      };
+      await client.set(`room:${room}`, JSON.stringify(newRoomData)); 
     }
+  
     socket.join(room);
     console.log(`${socket.id} joined room: ${room}`);
+    getRoomInfo('').then(roomData => {
+      if (roomData) {
+        console.log('Room data:', roomData);
+      } else {
+        console.log('Room not found');
+      }
+    });
+
     rooms[room] = rooms[room] ? [...rooms[room], socket.id] : [socket.id];
     console.log(socket.id + ' joined room ' + room);
     console.log(`User with ID: ${socket.id} joined room: ${room}`);
@@ -240,7 +266,7 @@ io.on("connection" , async(socket:Socket ) => {
   
       console.log(`Message from ${socket.id}: ${message}`);
     } catch (error) {
-      console.error("Error saving messageثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثثث:", error);
+      console.error("Error saving message:", error);
       socket.emit("error", { message: "Error saving message" });
     }
     socket.to(room).emit("receive_message", { message, author: socket.id });
@@ -249,9 +275,18 @@ io.on("connection" , async(socket:Socket ) => {
   });
 
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", (data) => {
       console.log("User Disconnected", socket.id);
+   
+      const userId = socket.email
+      setUserOffline(userId)
     });
+
+    socket.on("user_data" , (data)=>{
+      const { email, room } = data;
+      socket.email = email;
+    
+    })
 
 
   });
@@ -264,9 +299,67 @@ io.on("connection" , async(socket:Socket ) => {
     } catch (error) {
       console.error("Database connection failed:", error);
     } finally {
-      await prisma.$disconnect();  // قطع اتصال در صورت پایان تست
+      await prisma.$disconnect(); 
     }
   }
+
+
+  async function getRoomInfo(roomId: string) {
+    try {
+      const data = await client.get(`room:${roomId}`);
+      if (data) {
+        return JSON.parse(data);
+      } else {
+        console.log('Room not found in cache');
+        return null; 
+      }
+    } catch (err) {
+      console.error('Error fetching room data:', err);
+      return null;
+    }
+  }
+
+  function setUserOnline(userId:string) {
+    const key = `user:online:${userId}`;
+    const value = 'true';
+    client.set(key, value, {
+      EX: 1800,  // مدت زمان انقضا به ثانیه
+    }).then((reply) => {
+      console.log(`User ${userId} is now online.`);
+    }).catch((err) => {
+      console.error('Error setting user online:', err);
+    });
+  }
+  
+
+  function setUserOffline(userId:string) {
+    const key = `user:online:${userId}`;
+    
+    client.del(key).then((reply) => {
+      console.log(`User ${userId} is now offline.`);
+    }).catch((err) => {
+      console.error('Error setting user offline:', err);
+    });
+  }
+
+
+  // function isUserOnline(userId :number, callback) {
+  //   const key = `user:online:${userId}`;
+    
+  //   client.get(key).then((reply) => {
+  //     if (reply) {
+  //       console.log(`User ${userId} is online.`);
+  //       callback(null, true);
+  //     } else {
+  //       console.log(`User ${userId} is offline.`);
+  //       callback(null, false);
+  //     }
+  //   }).catch((err) => {
+  //     console.error('Error checking user status:', err);
+  //     callback(err, null);
+  //   });
+  // }
+ 
   
   testConnection();
 

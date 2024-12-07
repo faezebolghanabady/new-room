@@ -26,12 +26,17 @@ import "./assets/Style.css"
         const newSocket = io.connect('http://localhost:3000', {
           
           auth: {
-            token: token, 
+            token: token,  // ارسال توکن برای احراز هویت
+            email: email,  // ارسال ایمیل کاربر
+            room: room      // ارسال نام اتاق چت
           }
         });
 
         newSocket.on('connect', () => {
           console.log('WebSocket connected');
+          newSocket.data = { email, room };
+          newSocket.emit('user_data', { email, room });
+          console.log('Socket data set:', { email, room });
         });
         setSocket(newSocket);
         return () => {
@@ -50,6 +55,7 @@ import "./assets/Style.css"
         console.log('room' , room)
         const joinData = {
           room: room,
+          author: email,
         };
         socket.emit('join_room', joinData , (response)=>{
          console.log('3333333333333333333333')
