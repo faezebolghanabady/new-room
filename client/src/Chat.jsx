@@ -26,9 +26,9 @@ import "./assets/Style.css"
         const newSocket = io.connect('http://localhost:3000', {
           
           auth: {
-            token: token,  // ارسال توکن برای احراز هویت
-            email: email,  // ارسال ایمیل کاربر
-            room: room      // ارسال نام اتاق چت
+            token: token,  
+            email: email, 
+            room: room   
           }
         });
 

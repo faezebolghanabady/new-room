@@ -20,7 +20,7 @@ const prisma = new PrismaClient();
 
 
 const client = createClient({
-  url: 'redis://127.0.0.1:6379',
+  url: 'redis://redis:6379',
   socket: {
     connectTimeout: 10000  // افزایش زمان انتظار به 10 ثانیه
   }
@@ -126,16 +126,6 @@ const verifyUser = (socket:Socket, next:(err?: Error)=>void) => {
           return next(new Error("Invalid token data"));
         }
         
-        
-
-        // if(decoded && typeof decoded === 'object' && 'email' in decoded){
-        //   console.log('email ro darim migirim')
-        //   console.log("Decoded Tokenjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj: ", decoded); 
-        //   socket.email = decoded.email;
-          
-        // }
-
-
 
         console.log('ok verify ');
         return next();

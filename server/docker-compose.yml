@@ -1,0 +1,39 @@
+version: "3.8"
+services:
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: chatroom
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+
+  chatroom:
+    build: .
+    container_name: chatroom
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - mysql
+    networks:
+      - app-network
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: mysql://root:example@mysql:3306/chatroom
+
+networks:
+  app-network:
+    driver: bridge
