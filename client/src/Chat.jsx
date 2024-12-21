@@ -6,6 +6,7 @@ import {  useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import { useContext } from 'react';
 import EmailContext from './UserContext';
+import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import "./assets/Style.css"
 
@@ -16,9 +17,12 @@ import "./assets/Style.css"
     const[messageList , setMessagelist] = useState([]);
     const token = Cookies.get('accessToken');
     const [socket, setSocket] = useState(null);
+    const navigate = useNavigate();
 
 
 
+
+    console.log('tockeneeeeeeeeeeeeeeeeeeeeeeeeeeeeeee :>> ', token);
     useEffect(() => {
    
       if (token) {
@@ -35,6 +39,9 @@ import "./assets/Style.css"
         newSocket.on('connect', () => {
           console.log('WebSocket connected');
           newSocket.data = { email, room };
+          if (!email) {
+            navigate('/login');
+          }
           newSocket.emit('user_data', { email, room });
           console.log('Socket data set:', { email, room });
         });
@@ -47,6 +54,7 @@ import "./assets/Style.css"
         console.log('No access token found');
       }
     }, [token]);
+
 
     useEffect(() => {
       if (socket && room) {

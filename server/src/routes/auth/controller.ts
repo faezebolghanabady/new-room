@@ -60,8 +60,6 @@ export default class AuthController extends controller  {
 
         const { email, password } = req.body;
      
-
-     
         try {
            
           const user = await prisma.user.findFirst({where:{email}})

@@ -86,7 +86,6 @@ app.use(cors({
 
 
 
-
 const verifyUser = (socket:Socket, next:(err?: Error)=>void) => {
   const accessToken = socket.handshake.auth.token; 
   console.log("Access Token:", accessToken);
@@ -131,9 +130,6 @@ const verifyUser = (socket:Socket, next:(err?: Error)=>void) => {
         } else {
           return next(new Error("Invalid token data"));
         }
-        
-
-        console.log('ok verify ');
         return next();
       }
     });
@@ -175,6 +171,7 @@ io.on("connection" , async(socket:Socket ) => {
 const accessToken = socket.handshake.auth.token
 const decoded = Jwt.verify (accessToken , "jwt-access-token-secret-key" ) as dataToken
 const email = decoded.userEmail;
+
 console.log('email:>> ', email);
   socket.on('error', (error: Error) => {
     console.log('Error in socket connection:', error.message);
@@ -312,21 +309,6 @@ console.log('email:>> ', email);
     }
   }
 
-  // async function getRoomInfo(roomId: string) {
-  //   try {
-  //     const data = await client.get(`room:${roomId}`);
-  //     if (data) {
-  //       return JSON.parse(data);
-  //     } else {
-  //       console.log('Room not found in cache');
-  //       return null; 
-  //     }
-  //   } catch (err) {
-  //     console.error('Error fetching room data:', err);
-  //     return null;
-  //   }
-  // }
-
   function setUserOnline(userId:string) {
     const key = `user:online:${userId}`;
     const value = 'true';
@@ -350,24 +332,6 @@ console.log('email:>> ', email);
     });
   }
 
-
-  // function isUserOnline(userId :number, callback) {
-  //   const key = `user:online:${userId}`;
-    
-  //   client.get(key).then((reply) => {
-  //     if (reply) {
-  //       console.log(`User ${userId} is online.`);
-  //       callback(null, true);
-  //     } else {
-  //       console.log(`User ${userId} is offline.`);
-  //       callback(null, false);
-  //     }
-  //   }).catch((err) => {
-  //     console.error('Error checking user status:', err);
-  //     callback(err, null);
-  //   });
-  // }
- 
   
   testConnection();
 
@@ -382,97 +346,3 @@ app.set( "port", port );
 server.listen(app.get('port'), app.get('ipaddr'), () => {
   console.log(`Server is running at http://${app.get('ipaddr')}:${app.get('port')}`);
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const varifyUserr = (req, res, next) => {
-  
-//   const accessToken =  socket.handshake.auth.token;
-//   if (!accessToken) {
-//     if (renewToken(req, res)) {
-//       next();
-//     }
-//   } else {
-//     Jwt.verify(accessToken, "jwt-access-token-secret-key", (err, decoded) => {
-//       if (err) {
-//         return res.json({ valid: false, message: "invalid Token" });
-//       } else {
-//         req.email = decoded.email;
-//         next();
-//       }
-//     });
-//   }
-// };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // if (!data) {
-    //   console.log('pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp')
-    //   socket.email = decoded.userEmail;
-    //   socket.userId = decoded.userId;
-    //   let roomlast = await prisma.room.findFirst({
-    //       where: {
-    //         name: email,
-    //       },
-    //       orderBy: {
-    //         createdAt: 'desc', 
-    //       },
-    //     });
-
-    //     if (roomlast) {
-    //       room = String(roomlast.id);  
-    //       author = email; 
-    //       console.log('Last room:', room);
-    //     } else {
-    //       console.log('No previous room found for this user.');
-    //     }
-    //     if (room) {
-    //       socket.join(room);
-    //       console.log(`${socket.id} joined room: ${room}`);
-    //     } else {
-    //       console.log('No valid room to join');
-    //     }
-    //   }
-   
-    
-    // getRoomInfo('').then(roomData => {
-    //   if (roomData) {
-    //     console.log('Room data:', roomData);
-    //   } else {
-    //     console.log('Room not found');
-    //   }
-    // });

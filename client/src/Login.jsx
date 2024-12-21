@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import EmailContext  from './UserContext';
-import io from 'socket.io-client';
+// import io from 'socket.io-client';
 
 const Login = () => {
     console.log('login')
@@ -48,7 +48,7 @@ const {
 
          
          if (response.status === 200) {
-            const socket = io.connect("http://localhost:3000");
+            // const socket = io.connect("http://localhost:3000");
             // joinRoom();
            navigate('/chat');
          } 
