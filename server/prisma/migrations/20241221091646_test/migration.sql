@@ -1,37 +1,39 @@
 /*
   Warnings:
 
-  - You are about to drop the column `author` on the `message` table. All the data in the column will be lost.
-  - You are about to drop the column `chatId` on the `message` table. All the data in the column will be lost.
-  - You are about to drop the column `room` on the `message` table. All the data in the column will be lost.
-  - You are about to drop the `chat` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the column `author` on the `Message` table. All the data in the column will be lost.
+  - You are about to drop the column `chatId` on the `Message` table. All the data in the column will be lost.
+  - You are about to drop the column `room` on the `Message` table. All the data in the column will be lost.
+  - You are about to drop the `Chat` table. If the table is not empty, all the data it contains will be lost.
   - Added the required column `authorId` to the `Message` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `email` to the `Message` table without a default value. This is not possible if the table is not empty.
   - Added the required column `roomId` to the `Message` table without a default value. This is not possible if the table is not empty.
   - Added the required column `updatedAt` to the `Message` table without a default value. This is not possible if the table is not empty.
   - Added the required column `updatedAt` to the `User` table without a default value. This is not possible if the table is not empty.
 
 */
 -- DropForeignKey
-ALTER TABLE `message` DROP FOREIGN KEY `Message_chatId_fkey`;
+ALTER TABLE `Message` DROP FOREIGN KEY `Message_chatId_fkey`;
 
 -- AlterTable
-ALTER TABLE `message` DROP COLUMN `author`,
+ALTER TABLE `Message` DROP COLUMN `author`,
     DROP COLUMN `chatId`,
     DROP COLUMN `room`,
     ADD COLUMN `authorId` INTEGER NOT NULL,
+    ADD COLUMN `email` VARCHAR(191) NOT NULL,
     ADD COLUMN `roomId` INTEGER NOT NULL,
     ADD COLUMN `updatedAt` DATETIME(3) NOT NULL;
 
 -- AlterTable
-ALTER TABLE `user` ADD COLUMN `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+ALTER TABLE `User` ADD COLUMN `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     ADD COLUMN `updatedAt` DATETIME(3) NOT NULL;
 
 -- DropTable
-DROP TABLE `chat`;
+DROP TABLE `Chat`;
 
 -- CreateTable
 CREATE TABLE `Room` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` INTEGER NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,

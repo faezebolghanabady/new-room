@@ -6,5 +6,5 @@
 
 */
 -- AlterTable
-ALTER TABLE `user` ADD COLUMN `email` VARCHAR(191) NOT NULL,
+ALTER TABLE `User` ADD COLUMN `email` VARCHAR(191) NOT NULL,
     ADD COLUMN `password` VARCHAR(191) NOT NULL;

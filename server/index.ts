@@ -14,7 +14,7 @@ import redis from 'redis';
 import { createClient } from 'redis';
 import { json } from "stream/consumers";
 import { error } from "console";
-
+import jwt, { JwtPayload } from 'jsonwebtoken';
 const prisma = new PrismaClient();
 
 
@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
 const client = createClient({
   url: 'redis://redis:6379',
   socket: {
-    connectTimeout: 10000  // افزایش زمان انتظار به 10 ثانیه
+    connectTimeout: 10000  // Increase the wait time to 10 seconds.
   }
 });
 
@@ -39,7 +39,7 @@ interface JwtDecoded  {
 }
 
 interface JoinRoomData {
-  room: string;
+  room: string ;
   author : string;
 }
 
@@ -48,6 +48,12 @@ interface JoinRoomData {
 interface SendMessageData {
   room: string;
   message: string;
+  author:string;
+}
+
+interface dataToken extends JwtPayload {
+  userId: number ,
+   userEmail:string
 }
 
 const app = express();
@@ -108,13 +114,13 @@ const verifyUser = (socket:Socket, next:(err?: Error)=>void) => {
         if (decoded && typeof decoded === 'object') {
           console.log("Decoded Token: ", decoded); 
         
-          // بررسی وجود فیلد 'email' در توکن
+          // Checking for the existence of the 'email' field in the token
           if ('email' in decoded) {
             console.log('email ro darim migirim');
             socket.email = decoded.email;
           }
         
-          // بررسی وجود فیلد 'userId' در توکن
+          //Checking for the existence of the 'userId' field in the token
           if ('userId' in decoded) {
             console.log('userId ro darim migirim');
             socket.userId = decoded.userId;
@@ -129,7 +135,6 @@ const verifyUser = (socket:Socket, next:(err?: Error)=>void) => {
 
         console.log('ok verify ');
         return next();
-         // توکن معتبر است و ادامه می‌دهد
       }
     });
   }
@@ -167,7 +172,10 @@ io.use(verifyUser);
 let rooms: { [key: string]: string[] } = {}; 
 
 io.on("connection" , async(socket:Socket ) => {
-
+const accessToken = socket.handshake.auth.token
+const decoded = Jwt.verify (accessToken , "jwt-access-token-secret-key" ) as dataToken
+const email = decoded.userEmail;
+console.log('email:>> ', email);
   socket.on('error', (error: Error) => {
     console.log('Error in socket connection:', error.message);
   });
@@ -175,50 +183,60 @@ io.on("connection" , async(socket:Socket ) => {
   console.log(`User Connected to socketpp : ${socket.id}`);
 
   socket.on("join_room", async(data : JoinRoomData) => {
-    const {room , author } = data ;
-    
-    console.log('room', data)
-
+    const decoded = Jwt.verify (accessToken , "jwt-access-token-secret-key" ) as dataToken
+    let {room , author } = data ;
     const userId = author
     setUserOnline(userId);
 
     const roomData = await client.get(`room:${room}`);
-    if (roomData) {
+    const authorData = await client.get(`authorData:${author}`)
+   
+    if (roomData ) {
       const roomInfo = JSON.parse(roomData);
       roomInfo.members += 1;
+      roomInfo.user = author
       await client.set(`room:${room}`, JSON.stringify(roomInfo));
     } else {
       const newRoomData = {
         name: room,
-        createdAt: new Date().toISOString(), // زمان ایجاد
+        createdAt: new Date().toISOString(), // Creation time
        
       };
       await client.set(`room:${room}`, JSON.stringify(newRoomData)); 
     }
-  
     socket.join(room);
-    console.log(`${socket.id} joined room: ${room}`);
-    getRoomInfo('').then(roomData => {
-      if (roomData) {
-        console.log('Room data:', roomData);
-      } else {
-        console.log('Room not found');
+    const messages = await prisma.message.findMany({
+      where:{
+        roomId : parseInt(room, 10),
       }
-    });
+    })
 
-    rooms[room] = rooms[room] ? [...rooms[room], socket.id] : [socket.id];
-    console.log(socket.id + ' joined room ' + room);
-    console.log(`User with ID: ${socket.id} joined room: ${room}`);
+    const messageTexet = messages.map(msg=>({
+      id:msg.id,
+      roomId:msg.id,
+      email:msg.email,
+      authorId:msg.authorId,
+      message : msg.message ,
+      time: msg.createdAt.toISOString(),
+     
+
+    })
+      
+    )
+
+    socket.emit("room_messages", messageTexet);
+    console.log('messages:>> ', messageTexet);
   });
 
+  
+
   socket.on("send_message", async (data :SendMessageData) => {
-    console.log('datasend_message', data);
-    const { room, message } = data;
-    console.log('room firsteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', room)
+
+    const { room, message , author } = data;
+
     if (!room || !message){
       return socket.emit("error", { message: "Room name and message are required" });
     }
-
 
     try {
       let RoomUser = await prisma.room.findUnique({
@@ -231,25 +249,26 @@ io.on("connection" , async(socket:Socket ) => {
         RoomUser = await prisma.room.create({
           data : {
             id: parseInt(room, 10),
-            name: room,
+            name: author,
           }
         });
       }
 
-      console.log('socket.userId: رررررررررررررررررررررررررررررررررررررررررررر', socket.userId);
+      console.log('socket.userId:', socket.userId);
      
       const roomId = parseInt(room, 10);
-      console.log('rommid: رررررررررررررررررررررررررررررررررررررررررررر', roomId);
+      console.log('rommid:', roomId);
        if (isNaN(roomId)) {
        return socket.emit("error", { message: "Invalid room ID" });
        }
     
       const savedMessage = await prisma.message.create({
         data: {
+          email:email,
           message: message,
           authorId: socket.userId,
           roomId:roomId,
-          time: new Date().toISOString(),
+          time: new Date().toLocaleTimeString(),
         },
       });
 
@@ -259,7 +278,7 @@ io.on("connection" , async(socket:Socket ) => {
       console.error("Error saving message:", error);
       socket.emit("error", { message: "Error saving message" });
     }
-    socket.to(room).emit("receive_message", { message, author: socket.id });
+    socket.to(room).emit("receive_message", { message, author: socket.email });
     console.log(`Message from ${socket.id}: ${message}`);
 
   });
@@ -280,12 +299,12 @@ io.on("connection" , async(socket:Socket ) => {
 
 
   });
-
+  
 
   async function testConnection() {
     try {
-      await prisma.$connect();  // تست اتصال به پایگاه داده
-      console.log("Database connection successful!------------------------------------------------------------------------");
+      await prisma.$connect();  // Testing the database connection
+      console.log("Database connection successful!");
     } catch (error) {
       console.error("Database connection failed:", error);
     } finally {
@@ -293,27 +312,26 @@ io.on("connection" , async(socket:Socket ) => {
     }
   }
 
-
-  async function getRoomInfo(roomId: string) {
-    try {
-      const data = await client.get(`room:${roomId}`);
-      if (data) {
-        return JSON.parse(data);
-      } else {
-        console.log('Room not found in cache');
-        return null; 
-      }
-    } catch (err) {
-      console.error('Error fetching room data:', err);
-      return null;
-    }
-  }
+  // async function getRoomInfo(roomId: string) {
+  //   try {
+  //     const data = await client.get(`room:${roomId}`);
+  //     if (data) {
+  //       return JSON.parse(data);
+  //     } else {
+  //       console.log('Room not found in cache');
+  //       return null; 
+  //     }
+  //   } catch (err) {
+  //     console.error('Error fetching room data:', err);
+  //     return null;
+  //   }
+  // }
 
   function setUserOnline(userId:string) {
     const key = `user:online:${userId}`;
     const value = 'true';
     client.set(key, value, {
-      EX: 1800,  // مدت زمان انقضا به ثانیه
+      EX: 1800,  //Expiration time in seconds
     }).then((reply) => {
       console.log(`User ${userId} is now online.`);
     }).catch((err) => {
@@ -355,7 +373,7 @@ io.on("connection" , async(socket:Socket ) => {
 
 app.use('/api' , router)
 
-const ipaddr = process.env.IP_ADDR || "localhost";
+const ipaddr = process.env.IP_ADDR || "0.0.0.0";
 const port = process.env.PORT || 3000;
 app.set("ipaddr", ipaddr);
 app.set( "port", port );
@@ -402,3 +420,59 @@ server.listen(app.get('port'), app.get('ipaddr'), () => {
 //     });
 //   }
 // };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // if (!data) {
+    //   console.log('pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp')
+    //   socket.email = decoded.userEmail;
+    //   socket.userId = decoded.userId;
+    //   let roomlast = await prisma.room.findFirst({
+    //       where: {
+    //         name: email,
+    //       },
+    //       orderBy: {
+    //         createdAt: 'desc', 
+    //       },
+    //     });
+
+    //     if (roomlast) {
+    //       room = String(roomlast.id);  
+    //       author = email; 
+    //       console.log('Last room:', room);
+    //     } else {
+    //       console.log('No previous room found for this user.');
+    //     }
+    //     if (room) {
+    //       socket.join(room);
+    //       console.log(`${socket.id} joined room: ${room}`);
+    //     } else {
+    //       console.log('No valid room to join');
+    //     }
+    //   }
+   
+    
+    // getRoomInfo('').then(roomData => {
+    //   if (roomData) {
+    //     console.log('Room data:', roomData);
+    //   } else {
+    //     console.log('Room not found');
+    //   }
+    // });

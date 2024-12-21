@@ -11,7 +11,7 @@ const {
     email, 
     setEmail 
     , setRoom 
-    // ,room 
+    ,room 
 } = useContext(EmailContext);
     const [password, setPassword] = useState();
     const [errorMessage, setErrorMessage] = useState('');
@@ -43,6 +43,7 @@ const {
              {
            email,
            password,
+           room
          });
 
          

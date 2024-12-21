@@ -7,3 +7,5 @@ router.use('/auth' , authRouter);
 
 
 export default router;
+
+module.exports = router;

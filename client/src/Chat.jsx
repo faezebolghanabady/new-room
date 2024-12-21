@@ -48,21 +48,53 @@ import "./assets/Style.css"
       }
     }, [token]);
 
-  
     useEffect(() => {
-      console.log('11111111111111')
       if (socket && room) {
-        console.log('room' , room)
         const joinData = {
           room: room,
           author: email,
         };
-        socket.emit('join_room', joinData , (response)=>{
-         console.log('3333333333333333333333')
-          console.log('join_room message:data' , response);
+    
+        socket.emit('join_room', joinData, (response) => {
+          console.log('join_room message:data', response);
         });
+    
+        // دریافت پیام‌های قبلی
+        socket.on('room_messages', (response) => {
+          console.log('Previous messages:', response);
+          setMessagelist(response); 
+          console.log('messageList :>> ', messageList);
+        });
+    
+
+        socket.on('receive_message', (message) => {
+          console.log('received message:', message);
+          setMessagelist((list) => [...list, message]); // اضافه کردن پیام جدید به لیست
+        });
+    
+        return () => {
+          socket.off('room_messages'); // حذف listener زمانی که کامپوننت غیر فعال می‌شود
+          socket.off('receive_message'); // حذف listener پیام جدید
+        };
       }
-    }, [socket , room]);
+    }, [socket, room, email]);
+    
+
+  
+    // useEffect(() => {
+    //   if (socket && room) {
+    //     console.log('room' , room)
+    //     const joinData = {
+    //       room: room,
+    //       author: email,
+    //     };
+    //     socket.emit('join_room', joinData , (response)=>{
+    //       console.log('join_room message:data' , response);
+    //     });
+
+    //     socket.emit('')
+    //   }
+    // }, [socket , room]);
 
     useEffect(() => {
       if (socket) {  
@@ -125,6 +157,7 @@ import "./assets/Style.css"
                   <div className='message-meta'>
                     <p id="time">{messageContent.time}</p>
                     <p id="author">{messageContent.author}</p>
+                    <p id="author">{messageContent.email}</p>
                   </div>
                 </div>
               )

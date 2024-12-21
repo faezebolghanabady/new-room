@@ -12,13 +12,15 @@ services:
     image: mysql:8.0
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: example
+      MYSQL_ROOT_PASSWORD: faeze12345678
       MYSQL_DATABASE: chatroom
     ports:
-      - "3306:3306"
+      - "3308:3306"
     networks:
       - app-network
-
+    volumes:
+          - ./mysql/data:/var/lib/mysql
+  
   chatroom:
     build: .
     container_name: chatroom
@@ -29,10 +31,12 @@ services:
       - mysql
     networks:
       - app-network
+
+    volumes:
+      - .:/usr/src/app
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      DATABASE_URL: mysql://root:example@mysql:3306/chatroom
 
 networks:
   app-network:

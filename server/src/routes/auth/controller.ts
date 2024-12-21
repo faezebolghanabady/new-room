@@ -65,7 +65,7 @@ export default class AuthController extends controller  {
         try {
            
           const user = await prisma.user.findFirst({where:{email}})
-         
+
           if (!user) {
              res.status(401).json({ error: 'کاربر یافت نشد' });
              return
@@ -78,9 +78,9 @@ export default class AuthController extends controller  {
              return
           }
       
-          const accessToken = Jwt.sign({ userId: user.id }, 'jwt-access-token-secret-key', { expiresIn: '1h' });
+          const accessToken = Jwt.sign({ userId: user.id  , userEmail:user.email}, 'jwt-access-token-secret-key', { expiresIn: '1h' });
           
-          const refreshToken = Jwt.sign({ userId: user.id  },"jwt-refresh-token-secret-key",{ expiresIn: '1h'});
+          const refreshToken = Jwt.sign({ userId: user.id ,  userEmail:user.email },"jwt-refresh-token-secret-key",{ expiresIn: '1h'});
         
 
           res.cookie('accessToken', accessToken, { httpOnly: false , secure:true });
@@ -98,7 +98,8 @@ export default class AuthController extends controller  {
          
           res.json({ message: 'ورود با موفقیت انجام شد' });
         
-    
+          console.log('testttttttttttttttttttttttttttttttttttttttttttttttttttttttt', accessToken)
+          
         } catch (error) {
           console.error(error);
           res.status(500).json({ error: 'خطای داخلی سرور' });

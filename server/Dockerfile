@@ -9,8 +9,7 @@ WORKDIR /usr/src/app
 COPY . ./
 
 RUN npm install
-RUN npx prisma generate
-COPY . .
+
 
 CMD ["npm", "start"]
 

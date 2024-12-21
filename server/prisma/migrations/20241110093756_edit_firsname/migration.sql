@@ -7,6 +7,6 @@
 
 */
 -- AlterTable
-ALTER TABLE `user` DROP COLUMN `firstName`,
+ALTER TABLE `User` DROP COLUMN `firstName`,
     DROP COLUMN `lastName`,
     ADD COLUMN `name` VARCHAR(191) NOT NULL;
