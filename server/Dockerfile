@@ -16,8 +16,3 @@ CMD ["npm", "start"]
 
 
 EXPOSE 3000
-
-
-# RUN npm install
-# COPY server ./
-# RUN npm install

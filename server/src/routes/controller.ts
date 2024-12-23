@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ValidationError } from 'express-validator'; // Import ValidationError
+import { ValidationError } from 'express-validator';
 import { validationResult } from 'express-validator';
 
 import autobind from 'auto-bind';
@@ -10,26 +10,19 @@ export default class controller {
   }
 
   // Method for validating the request body
-  validationBody(req: Request, res: Response): boolean | void {
-    const result = validationResult(req);  // Get validation result from express-validator
+  validationBody(req: Request, res: Response): boolean{
+    const result = validationResult(req);
 
-    if (!result.isEmpty()) {  // Check if validation result is not empty
-      const errors = result.array();
-      const message: string[] = [];
-
-      // Explicitly type 'err' as 'ValidationError'
-      errors.forEach((err: ValidationError) => {
-        message.push(err.msg);  // Push the error message to 'message' array
-      });
-
+    if (!result.isEmpty()) {
+      const message = result.array().map((err)=>err.msg)
       res.status(400).json({
         message: 'Validation error',
         data: message,
       });
-      return false;  // Validation failed, return false
+      return false;  
     }
 
-    return true;  // Validation successful
+    return true; 
   }
 
   // Middleware method to handle validation and call next if valid

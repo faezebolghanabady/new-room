@@ -27,7 +27,7 @@ const client = createClient({
 });
 
 client.connect ().then(()=>{
-console.log('conecting to the rdisssssssssssssssssssssssssss')
+console.log('conecting to the rdis')
 })
 
 interface JwtDecoded  {
@@ -280,7 +280,6 @@ console.log('email:>> ', email);
 
   });
 
-
     socket.on("disconnect", (data) => {
       console.log("User Disconnected", socket.id);
    
@@ -293,7 +292,6 @@ console.log('email:>> ', email);
       socket.email = email;
     
     })
-
 
   });
   

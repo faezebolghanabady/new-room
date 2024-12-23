@@ -194,7 +194,7 @@
    */
 
 
-
+/* ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 
 
    .App {
@@ -409,4 +409,55 @@
   .hide {
     opacity: 0 !important;
   }
+
+
+
+  .notifications {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    width: 80%;
+    max-width: 600px;
+  }
+  
+  .notification {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 30px;
+    margin: 10px 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    font-size: 20px;
+    text-align: center;
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    transform: translateY(-50%); /* دقیقاً در وسط عمودی قرار گیرد */
+  }
+
+
+  .bg-read button {
+    background-color: #f44336; /* رنگ پس‌زمینه قرمز برای دکمه */
+    color: white; /* رنگ متن سفید */
+    border: none; /* بردر نداشتن */
+    padding: 15px 30px; /* فاصله داخلی زیاد برای دکمه */
+    font-size: 18px; /* اندازه فونت بزرگ */
+    border-radius: 5px; /* گوشه‌های گرد برای دکمه */
+    cursor: pointer; /* نشان دادن دست هنگام hover */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* افکت‌های انتقال صاف */
+  }
+  
+  .bg-read button:hover {
+    background-color: #e53935; /* تغییر رنگ پس‌زمینه هنگام hover */
+    transform: scale(1.05); /* کمی بزرگ‌تر شدن دکمه هنگام hover */
+  }
+  
+  .bg-read button:focus {
+    outline: none; /* حذف outline در حالت focus */
+    box-shadow: 0 0 10px rgba(244, 67, 54, 0.5); /* اضافه کردن سایه برای تمرکز */
+  }
+  
+  
   

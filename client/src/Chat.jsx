@@ -13,16 +13,18 @@ import "./assets/Style.css"
  function Chat () {
     
     const[currentMessage , setCurrentMessage] = useState();
-    const { email , room } = useContext(EmailContext);
+    let { email , room } = useContext(EmailContext);
     const[messageList , setMessagelist] = useState([]);
+    const [notifications, setNotifications] = useState([]);
     const token = Cookies.get('accessToken');
-    const [socket, setSocket] = useState(null);
+    let [socket, setSocket] = useState(null);
     const navigate = useNavigate();
 
 
+    
 
 
-    console.log('tockeneeeeeeeeeeeeeeeeeeeeeeeeeeeeeee :>> ', token);
+    console.log('tocken:>> ', token);
     useEffect(() => {
    
       if (token) {
@@ -87,36 +89,6 @@ import "./assets/Style.css"
       }
     }, [socket, room, email]);
     
-
-  
-    // useEffect(() => {
-    //   if (socket && room) {
-    //     console.log('room' , room)
-    //     const joinData = {
-    //       room: room,
-    //       author: email,
-    //     };
-    //     socket.emit('join_room', joinData , (response)=>{
-    //       console.log('join_room message:data' , response);
-    //     });
-
-    //     socket.emit('')
-    //   }
-    // }, [socket , room]);
-
-    useEffect(() => {
-      if (socket) {  
-        socket.on('receive_message', (data) => {
-          console.log('received message:', data);
-          setMessagelist((list) => [...list, data]);
-        });
-    
-        return () => {
-          socket.off('receive_message'); 
-        };
-      }
-    }, [socket]);  
-    
   
 
   const sendMessage = async () => {
@@ -145,6 +117,39 @@ import "./assets/Style.css"
      
     }
   };
+
+  const deleteRoom = async () => {
+    console.log('Deleting room...');
+    if (socket) {
+      socket.emit('leave_room', { email, room }); // به سرور اطلاع می‌دهیم که کاربر از اتاق می‌رود
+      socket.disconnect();
+      setSocket(null); // قطع اتصال WebSocket
+    }
+
+    addNotification('اتاق با موفقیت حذف شد'); // اضافه کردن نوتیفیکیشن حذف اتاق
+
+    setTimeout(() => {
+      navigate('/login'); // هدایت به صفحه ورود پس از 3 ثانیه
+    }, 3000); // پیام را بعد از 3 ثانیه پاک می‌کنیم
+  };
+
+
+  const addNotification = (message) => {
+    const id = new Date().getTime(); // استفاده از timestamp به عنوان شناسه یکتا برای نوتیفیکیشن‌ها
+    setNotifications((prevNotifications) => [
+      ...prevNotifications,
+      { id, message },
+    ]);
+
+    // حذف نوتیفیکیشن بعد از 3 ثانیه
+    setTimeout(() => {
+      setNotifications((prevNotifications) =>
+        prevNotifications.filter((notification) => notification.id !== id)
+      );
+    }, 3000);
+  };
+  
+
 
   return (
     
@@ -183,6 +188,19 @@ import "./assets/Style.css"
               ></input>
             <button onClick={sendMessage}>&#9658;</button>
         </div>
+
+        <div className="bg-read">
+        <button onClick={deleteRoom}>حذف اتاق</button>
+      </div>
+
+      {/* نمایش نوتیفیکیشن‌ها */}
+      <div className="notifications">
+        {notifications.map((notification) => (
+          <div key={notification.id} className="notification">
+            <p>{notification.message}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -211,3 +229,50 @@ export default Chat;
     //     token: token,  // ارسال توکن از طریق handshake.auth
     //   }
     // });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    // useEffect(() => {
+    //   if (socket && room) {
+    //     console.log('room' , room)
+    //     const joinData = {
+    //       room: room,
+    //       author: email,
+    //     };
+    //     socket.emit('join_room', joinData , (response)=>{
+    //       console.log('join_room message:data' , response);
+    //     });
+
+    //     socket.emit('')
+    //   }
+    // }, [socket , room]);
+
+    // useEffect(() => {
+    //   if (socket) {  
+    //     socket.on('receive_message', (data) => {
+    //       console.log('received message:', data);
+    //       setMessagelist((list) => [...list, data]);
+    //     });
+    
+    //     return () => {
+    //       socket.off('receive_message'); 
+    //     };
+    //   }
+    // }, [socket]);  

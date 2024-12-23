@@ -1,0 +1,264 @@
+.App {
+    width: 100vw;
+    height: 100vh;
+    background: #fff;
+    color: #212121;
+    font-family: "Open Sans", sans-serif;
+    display: grid;
+    place-items: center;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  
+  @import url("https://fonts.googleapis.com/css?family=Open+Sans:300,400,700");
+  
+  .joinChatContainer {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .joinChatContainer h3 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .joinChatContainer input {
+    width: 210px;
+    height: 40px;
+    margin: 7px;
+    border: 2px solid #43a047;
+    border-radius: 5px;
+    padding: 5px;
+    font-size: 16px;
+  }
+  
+  .joinChatContainer button {
+    width: 225px;
+    height: 50px;
+    margin: 7px;
+    border: none;
+    border-radius: 5px;
+    padding: 5px;
+    font-size: 16px;
+    background: #43a047;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  .joinChatContainer button:hover {
+    background: #2e7d32;
+  }
+  
+  .chat-window {
+    width: 100%;
+    max-width: 600px;
+    height: 600px;
+  }
+  
+  .chat-window p {
+    margin: 0;
+  }
+  
+  .chat-window .chat-header {
+    height: 45px;
+    border-radius: 6px;
+    background: #2b0676;
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .chat-window .chat-header p {
+    display: block;
+    padding: 0 1em 0 2em;
+    color: #fff;
+    font-weight: 700;
+    line-height: 45px;
+  }
+  
+  .chat-window .chat-body {
+    height: calc(450px - (45px + 70px)); /* تنظیم ارتفاع با توجه به اندازه بخش‌های دیگر */
+    border: 1px solid #263238;
+    background: #fff;
+    position: relative;
+    overflow-y: auto; /* فعال‌سازی اسکرول */
+  }
+  
+  .chat-window .chat-body .message-container {
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+  }
+  
+  .chat-window .chat-body .message-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .chat-window .chat-body .message-container::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 5px;
+  }
+  
+  .chat-window .chat-body .message {
+    height: auto;
+    padding: 10px;
+    display: flex;
+  }
+  
+  .chat-window .chat-body .message .message-content {
+    width: auto;
+    height: auto;
+    min-height: 40px;
+    max-width: 120px;
+    background-color: rgb(15, 156, 227);
+    border-radius: 5px;
+    color: white;
+    display: flex;
+    align-items: center;
+    margin-right: 5px;
+    margin-left: 5px;
+    padding-right: 5px;
+    padding-left: 5px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  #you {
+    justify-content: flex-start;
+  }
+  
+  #you .message-content {
+    justify-content: flex-start;
+  }
+  
+  #you .message-meta {
+    justify-content: flex-start;
+    margin-left: 5px;
+  }
+  
+  #other {
+    justify-content: flex-end;
+  }
+  
+  #other .message-content {
+    justify-content: flex-end;
+    background-color: cornflowerblue;
+  }
+  
+  #other .message-meta {
+    justify-content: flex-end;
+    margin-right: 5px;
+  }
+  
+  .message-meta #author {
+    margin-left: 10px;
+    font-weight: bold;
+  }
+  
+  .chat-window .chat-body .message .message-meta {
+    display: flex;
+    font-size: 12px;
+  }
+  
+  .chat-window .chat-footer {
+    height: 50px; /* ارتفاع مناسب برای دکمه و ورودی */
+    border: 1px solid #263238;
+    border-top: none;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+  }
+  
+  .chat-window .chat-footer input {
+    height: 100%;
+    flex: 80%; /* فضای بیشتر برای ورودی */
+    padding: 0 15px;
+    font-size: 1rem;
+    outline: none;
+  }
+  
+  .chat-window .chat-footer button {
+    border: 0;
+ 
+    place-items: center;
+    cursor: pointer;
+    flex: 10%;
+    height: 80%;
+    background: #5bb1e7;
+    border-radius: 5%;
+    outline: none;
+    font-size: 1.5rem;
+    color: white;
+    transition: background 0.3s, transform 0.2s ease;
+  }
+  
+  .chat-window .chat-footer button:hover {
+    background: #3c68b3;
+   
+  }
+  
+  .chat-window .chat-footer button:active {
+    background: #1f95c4;
+ 
+  }
+  
+ 
+  
+  .hide {
+    opacity: 0 !important;
+  }
+
+
+
+  .notifications {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    width: 80%;
+    max-width: 600px;
+  }
+  
+  .notification {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 30px;
+    margin: 10px 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    font-size: 20px;
+    text-align: center;
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    transform: translateY(-50%); /* دقیقاً در وسط عمودی قرار گیرد */
+  }
+
+
+  .bg-read button {
+    background-color: #f44336; /* رنگ پس‌زمینه قرمز برای دکمه */
+    color: white; /* رنگ متن سفید */
+    border: none; /* بردر نداشتن */
+    padding: 15px 30px; /* فاصله داخلی زیاد برای دکمه */
+    font-size: 18px; /* اندازه فونت بزرگ */
+    border-radius: 5px; /* گوشه‌های گرد برای دکمه */
+    cursor: pointer; /* نشان دادن دست هنگام hover */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* افکت‌های انتقال صاف */
+  }
+  
+  .bg-read button:hover {
+    background-color: #e53935; /* تغییر رنگ پس‌زمینه هنگام hover */
+    transform: scale(1.05); /* کمی بزرگ‌تر شدن دکمه هنگام hover */
+  }
+  
+  .bg-read button:focus {
+    outline: none; /* حذف outline در حالت focus */
+    box-shadow: 0 0 10px rgba(244, 67, 54, 0.5); /* اضافه کردن سایه برای تمرکز */
+  }
+  
+  
+  

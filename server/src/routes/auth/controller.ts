@@ -96,7 +96,7 @@ export default class AuthController extends controller  {
          
           res.json({ message: 'ورود با موفقیت انجام شد' });
         
-          console.log('testttttttttttttttttttttttttttttttttttttttttttttttttttttttt', accessToken)
+          console.log('accessToken', accessToken)
           
         } catch (error) {
           console.error(error);
