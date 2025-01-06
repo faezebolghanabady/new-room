@@ -85,7 +85,7 @@ export default class AuthController extends controller  {
           res.cookie('refreshToken', refreshToken, { httpOnly: false , secure:true });
 
 
-          res.cookie("accessToken", accessToken,   {
+          res.cookie("accessToken", accessToken,{
             httpOnly: false, 
             sameSite: 'none', 
             domain:'localhost',

@@ -121,9 +121,9 @@ const {
                                                     onChange={(e) => setRoom(e.target.value)}
                                                     type="text" className="form-control" name="room"  id="room" placeholder="room" required />
                                                 <label htmlFor="room" className="form-label">room</label>
-                                                <div className="d-grid my-3">
+                                                {/* <div className="d-grid my-3">
                                                    <button onClick={handleClick}  className="btn btn-primary btn-lg " type="submit">join room</button>
-                                                </div>
+                                                </div> */}
                                             </div>
                                         </div>
 

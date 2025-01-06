@@ -43,8 +43,6 @@ interface JoinRoomData {
   author : string;
 }
 
-
-
 interface SendMessageData {
   room: string;
   message: string;
@@ -54,6 +52,11 @@ interface SendMessageData {
 interface dataToken extends JwtPayload {
   userId: number ,
    userEmail:string
+}
+
+interface disconnectData {
+  room: string ,
+  author : string
 }
 
 const app = express();
@@ -67,7 +70,7 @@ app.use(
 );
 
 
- app.use(cors())
+app.use(cors())
 const server = http.createServer(app);
 const io = new Server(server, {
 
@@ -137,8 +140,6 @@ const verifyUser = (socket:Socket, next:(err?: Error)=>void) => {
 };
 
 
-
-
 const renewToken = (socket:Socket) => {
   const refreshtoken = socket.handshake.query.refreshToken;
   let exist = false;
@@ -172,6 +173,12 @@ const accessToken = socket.handshake.auth.token
 const decoded = Jwt.verify (accessToken , "jwt-access-token-secret-key" ) as dataToken
 const email = decoded.userEmail;
 
+socket.on ("user_data" , (data)=>{
+  const { email, room } = data;
+  socket.email = email;
+
+})
+
 console.log('email:>> ', email);
   socket.on('error', (error: Error) => {
     console.log('Error in socket connection:', error.message);
@@ -184,7 +191,7 @@ console.log('email:>> ', email);
     let {room , author } = data ;
     const userId = author
     setUserOnline(userId);
-
+    setRoomOnline(room)
     const roomData = await client.get(`room:${room}`);
     const authorData = await client.get(`authorData:${author}`)
    
@@ -192,15 +199,18 @@ console.log('email:>> ', email);
       const roomInfo = JSON.parse(roomData);
       roomInfo.members += 1;
       roomInfo.user = author
-      await client.set(`room:${room}`, JSON.stringify(roomInfo));
+      // await client.set(`room:${room}`, JSON.stringify(roomInfo));
     } else {
       const newRoomData = {
         name: room,
         createdAt: new Date().toISOString(), // Creation time
        
       };
-      await client.set(`room:${room}`, JSON.stringify(newRoomData)); 
+      // await client.set(`room:${room}`, JSON.stringify(newRoomData)); 
     }
+
+
+
     socket.join(room);
     const messages = await prisma.message.findMany({
       where:{
@@ -210,7 +220,7 @@ console.log('email:>> ', email);
 
     const messageTexet = messages.map(msg=>({
       id:msg.id,
-      roomId:msg.id,
+      roomId:msg.roomId,
       email:msg.email,
       authorId:msg.authorId,
       message : msg.message ,
@@ -221,8 +231,8 @@ console.log('email:>> ', email);
       
     )
 
-    socket.emit("room_messages", messageTexet);
-    console.log('messages:>> ', messageTexet);
+    socket.emit("room_messages", messageTexet );
+    console.log('messagessssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss:>> ', messageTexet);
   });
 
   
@@ -261,7 +271,7 @@ console.log('email:>> ', email);
     
       const savedMessage = await prisma.message.create({
         data: {
-          email:email,
+          email:socket.email,
           message: message,
           authorId: socket.userId,
           roomId:roomId,
@@ -269,30 +279,31 @@ console.log('email:>> ', email);
         },
       });
 
+   
   
       console.log(`Message from ${socket.id}: ${message}`);
     } catch (error) {
       console.error("Error saving message:", error);
       socket.emit("error", { message: "Error saving message" });
     }
-    socket.to(room).emit("receive_message", { message, author: socket.email });
+    socket.to(room).emit("receive_message", { message, author });
     console.log(`Message from ${socket.id}: ${message}`);
 
   });
 
-    socket.on("disconnect", (data) => {
+  // socket.on('get_room_messages' , (data  , callback)=>{
+
+  //  const {room} = data ;
+  // })
+
+    socket.on("disconnect", (disconnectData) => {
       console.log("User Disconnected", socket.id);
-   
       const userId = socket.email
+     setRoomffline(disconnectData)
       setUserOffline(userId)
     });
 
-    socket.on("user_data" , (data)=>{
-      const { email, room } = data;
-      socket.email = email;
-    
-    })
-
+  
   });
   
 
@@ -318,6 +329,17 @@ console.log('email:>> ', email);
       console.error('Error setting user online:', err);
     });
   }
+
+
+  function setRoomOnline (room:string){
+    client.set(`room online : ${room}` , room)
+  }
+
+
+  function setRoomffline (room:string){
+    client.del(`room online : ${room}`)
+  }
+  
   
 
   function setUserOffline(userId:string) {
@@ -331,7 +353,7 @@ console.log('email:>> ', email);
   }
 
   
-  testConnection();
+testConnection();
 
 app.use('/api' , router)
 

@@ -13,15 +13,14 @@ import "./assets/Style.css"
  function Chat () {
     
     const[currentMessage , setCurrentMessage] = useState();
-    let { email , room } = useContext(EmailContext);
+    let { email , room , setRoom } = useContext(EmailContext);
     const[messageList , setMessagelist] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const token = Cookies.get('accessToken');
     let [socket, setSocket] = useState(null);
+    const [editRoom, setEditRoom] = useState(false); // برای نمایش ویرایش اتاق
+    const [newRoom, setNewRoom] = useState(''); // برای ذخیره شماره اتاق جدید
     const navigate = useNavigate();
-
-
-    
 
 
     console.log('tocken:>> ', token);
@@ -77,9 +76,9 @@ import "./assets/Style.css"
         });
     
 
-        socket.on('receive_message', (message) => {
-          console.log('received message:', message);
-          setMessagelist((list) => [...list, message]); // اضافه کردن پیام جدید به لیست
+        socket.on('receive_message', (data) => {
+          console.log('received message:', data);
+          setMessagelist((list) => [...list, data]); // اضافه کردن پیام جدید به لیست
         });
     
         return () => {
@@ -94,7 +93,7 @@ import "./assets/Style.css"
   const sendMessage = async () => {
     if (currentMessage !== '' && socket) {
       const messageData = {
-        room:room,
+        room :room,
         author: email,
         message: currentMessage,
         time: new Date().toLocaleTimeString('en-US', { hour12: false }),
@@ -122,11 +121,16 @@ import "./assets/Style.css"
     console.log('Deleting room...');
     if (socket) {
       socket.emit('leave_room', { email, room }); // به سرور اطلاع می‌دهیم که کاربر از اتاق می‌رود
-      socket.disconnect();
+      const disconnectData = {
+        room: room,
+        author: email,
+      };
+      socket.disconnect()
+      // socket.emit('disconnect' ,disconnectData );
       setSocket(null); // قطع اتصال WebSocket
     }
 
-    addNotification('اتاق با موفقیت حذف شد'); // اضافه کردن نوتیفیکیشن حذف اتاق
+    addNotification('خروج از اتاق با موفقیت انجام شد'); // اضافه کردن نوتیفیکیشن حذف اتاق
 
     setTimeout(() => {
       navigate('/login'); // هدایت به صفحه ورود پس از 3 ثانیه
@@ -148,6 +152,38 @@ import "./assets/Style.css"
       );
     }, 3000);
   };
+
+
+
+
+ const changeRoom = () => {
+
+  if (newRoom) {
+    console.log('newRoommmmmmmmmmmmmmmmm :>> ', newRoom);
+      setEditRoom(false); // مخفی کردن ورودی
+      console.log('roommmmmmmmm :>> ', room);
+      setRoom (newRoom)
+      console.log('room :>> ', room);
+      console.log('email :>> ', email);
+      // const joinData = {
+      //   room: room,
+      //   email: email,
+      // };
+      // console.log('joinDataaaaaaaaaaaaaaaaaaa :>> ', joinData);
+      // socket.emit('join_room', joinData, (response) => {
+      //   console.log('join_room message:data', response);
+      // });
+
+      
+
+        // // دریافت پیام‌های قبلی
+        // socket.emit('get_room_messages', { room: room } ,  (response) => {
+        //   console.log('Previous messages:', response);
+        //   setMessagelist(response); 
+        //   console.log('messageList :>> ', messageList);
+        // });
+  }
+};
   
 
 
@@ -155,13 +191,18 @@ import "./assets/Style.css"
     
     <div className='chat-window'>
         <div className='chat-header'>
-            <p>chat room </p>
+        <p> user:{email}, room:{room}</p>
+
         </div>
         <div className='chat-body'>
           {
             messageList.map((messageContent)=>{
+              console.log('Rendering message:', messageContent);
               return (
-                <div className='message' key={messageContent.id} id={email === messageContent.author ? "you" : "other"}>
+                <div className='message' 
+                key={messageContent.id} 
+                id={email === messageContent.author ? "you" : "other"}
+                >
                   <div className='message-content'>
                     <p>
                       {messageContent.message}
@@ -170,28 +211,47 @@ import "./assets/Style.css"
                   <div className='message-meta'>
                     <p id="time">{messageContent.time}</p>
                     <p id="author">{messageContent.author}</p>
-                    <p id="author">{messageContent.email}</p>
+                    <p id="email">{messageContent.email}</p>
                   </div>
                 </div>
               )
             })
           }
         </div>
-        <div className='chat-footer'>
-            <input
-            onChange={(event)=>{
-                setCurrentMessage(event.target.value)
-            }}
-            value={currentMessage}
-             type='text'
-              placeholder='hiii'
-              ></input>
-            <button onClick={sendMessage}>&#9658;</button>
-        </div>
 
-        <div className="bg-read">
-        <button onClick={deleteRoom}>حذف اتاق</button>
-      </div>
+
+<div className='chat-footer'>
+  <input
+    onChange={(event) => setCurrentMessage(event.target.value)}
+    value={currentMessage}
+    type='text'
+    placeholder='Say something...'
+  />
+  <button onClick={sendMessage}>&#9658;</button>
+</div>
+
+<div className="bg-read">
+  <button onClick={deleteRoom}>خروج از اتاق</button>
+  <button onClick={() => setEditRoom(true)}>ویرایش اتاق</button>
+</div>
+
+       {/* نمایش ورودی ویرایش اتاق */}
+       {editRoom && (
+  <>
+    <div className="bg-overlay" onClick={() => setEditRoom(false)}></div>
+    <div className="edit-room">
+      <input
+        type="text"
+        value={newRoom}
+        onChange={(e) => setNewRoom(e.target.value)}
+        placeholder="Enter new room number"
+      />
+      <button onClick={changeRoom}>اعمال تغییرات</button>
+      <button className="cancel-button" onClick={() => setEditRoom(false)}>لغو</button>
+    </div>
+  </>
+)}
+
 
       {/* نمایش نوتیفیکیشن‌ها */}
       <div className="notifications">
@@ -206,73 +266,3 @@ import "./assets/Style.css"
 }
 
 export default Chat;
-
-
-
-
-
-
-
-
-
-
-
-
-    // if (!token) {
-    //   console.log('No access token found');
-    //   return null;
-    // }
-  
-  
-    // const socket = io.connect('http://127.0.0.1:3000', {
-    //   auth: {
-    //     token: token,  // ارسال توکن از طریق handshake.auth
-    //   }
-    // });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    // useEffect(() => {
-    //   if (socket && room) {
-    //     console.log('room' , room)
-    //     const joinData = {
-    //       room: room,
-    //       author: email,
-    //     };
-    //     socket.emit('join_room', joinData , (response)=>{
-    //       console.log('join_room message:data' , response);
-    //     });
-
-    //     socket.emit('')
-    //   }
-    // }, [socket , room]);
-
-    // useEffect(() => {
-    //   if (socket) {  
-    //     socket.on('receive_message', (data) => {
-    //       console.log('received message:', data);
-    //       setMessagelist((list) => [...list, data]);
-    //     });
-    
-    //     return () => {
-    //       socket.off('receive_message'); 
-    //     };
-    //   }
-    // }, [socket]);  
