@@ -121,10 +121,10 @@ import "./assets/Style.css"
     console.log('Deleting room...');
     if (socket) {
       socket.emit('leave_room', { email, room }); // به سرور اطلاع می‌دهیم که کاربر از اتاق می‌رود
-      const disconnectData = {
-        room: room,
-        author: email,
-      };
+      // const disconnectData = {
+      //   room: room,
+      //   author: email,
+      // };
       socket.disconnect()
       // socket.emit('disconnect' ,disconnectData );
       setSocket(null); // قطع اتصال WebSocket

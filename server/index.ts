@@ -13,7 +13,7 @@ import { PrismaClient } from '@prisma/client';
 import redis from 'redis';
 import { createClient } from 'redis';
 import { json } from "stream/consumers";
-import { error } from "console";
+import { error, time } from "console";
 import jwt, { JwtPayload } from 'jsonwebtoken';
 const prisma = new PrismaClient();
 
@@ -47,6 +47,7 @@ interface SendMessageData {
   room: string;
   message: string;
   author:string;
+  time:string;
 }
 
 interface dataToken extends JwtPayload {
@@ -224,7 +225,7 @@ console.log('email:>> ', email);
       email:msg.email,
       authorId:msg.authorId,
       message : msg.message ,
-      time: msg.createdAt.toISOString(),
+      time: msg.time
      
 
     })
@@ -237,9 +238,9 @@ console.log('email:>> ', email);
 
   
 
-  socket.on("send_message", async (data :SendMessageData) => {
+  socket.on("send_message", async (messageData :SendMessageData) => {
 
-    const { room, message , author } = data;
+    const { room, message , author , time} = messageData;
 
     if (!room || !message){
       return socket.emit("error", { message: "Room name and message are required" });
@@ -257,6 +258,7 @@ console.log('email:>> ', email);
           data : {
             id: parseInt(room, 10),
             name: author,
+            
           }
         });
       }
@@ -286,7 +288,7 @@ console.log('email:>> ', email);
       console.error("Error saving message:", error);
       socket.emit("error", { message: "Error saving message" });
     }
-    socket.to(room).emit("receive_message", { message, author });
+    socket.to(room).emit("receive_message", { message , author , time});
     console.log(`Message from ${socket.id}: ${message}`);
 
   });
