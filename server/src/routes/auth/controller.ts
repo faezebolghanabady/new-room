@@ -76,7 +76,7 @@ export default class AuthController extends controller  {
              return
           }
       
-          const accessToken = Jwt.sign({ userId: user.id  , userEmail:user.email}, 'jwt-access-token-secret-key', { expiresIn: '1h' });
+          const accessToken = Jwt.sign({ userId: user.id  , userEmail:user.email }, 'jwt-access-token-secret-key', { expiresIn: '1h' });
           
           const refreshToken = Jwt.sign({ userId: user.id ,  userEmail:user.email },"jwt-refresh-token-secret-key",{ expiresIn: '1h'});
         

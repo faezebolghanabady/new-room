@@ -125,8 +125,8 @@ import "./assets/Style.css"
       //   room: room,
       //   author: email,
       // };
-      socket.disconnect()
       // socket.emit('disconnect' ,disconnectData );
+      socket.disconnect()
       setSocket(null); // قطع اتصال WebSocket
     }
 

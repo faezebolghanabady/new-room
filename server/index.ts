@@ -233,7 +233,7 @@ console.log('email:>> ', email);
     )
 
     socket.emit("room_messages", messageTexet );
-    console.log('messagessssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss:>> ', messageTexet);
+    console.log('messages:>> ', messageTexet);
   });
 
   
@@ -301,7 +301,8 @@ console.log('email:>> ', email);
     socket.on("disconnect", (disconnectData) => {
       console.log("User Disconnected", socket.id);
       const userId = socket.email
-     setRoomffline(disconnectData)
+      
+    //  setRoomffline(disconnectData)
       setUserOffline(userId)
     });
 
@@ -334,13 +335,13 @@ console.log('email:>> ', email);
 
 
   function setRoomOnline (room:string){
-    client.set(`room online : ${room}` , room)
+    client.set(`Created room : ${room}` , room)
   }
 
 
-  function setRoomffline (room:string){
-    client.del(`room online : ${room}`)
-  }
+  // function setRoomffline (room:string){
+  //   client.del(`room online : ${room}`)
+  // }
   
   
 
